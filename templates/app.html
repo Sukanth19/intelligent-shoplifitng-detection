@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shoplifting Detection</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+<header class="topbar">
+    <div class="brand">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 2 4 5v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V5l-8-3Zm0 5a3 3 0 1 1 0 6 3 3 0 0 1 0-6Zm0 13c-2-.7-3.8-2.2-4.9-4.1.9-1.5 2.9-2.4 4.9-2.4s4 .9 4.9 2.4A8.9 8.9 0 0 1 12 20Z"/></svg>
+        <span>Shoplifting Detection</span>
+        <small>MSL · Video Swin Transformer</small>
+    </div>
+    <nav class="tabs" role="tablist">
+        <button class="tab active" data-page="analyze">Analyze video</button>
+        <button class="tab" data-page="explorer">Dataset explorer</button>
+        <button class="tab" data-page="model">Model &amp; results</button>
+    </nav>
+    <div class="device" id="device-badge">…</div>
+</header>
+
+<main>
+    <!-- ======================= ANALYZE ======================= -->
+    <section class="page active" id="page-analyze">
+        <div class="grid-2">
+            <div class="card">
+                <h2>Upload surveillance footage</h2>
+                <p class="muted">The video is split into 16-frame snippets. Each snippet is encoded by a pretrained
+                    Video Swin-B and scored by the trained MSL transformer.</p>
+                <label class="dropzone" id="dropzone">
+                    <input type="file" id="file-input" accept="video/*" hidden>
+                    <svg viewBox="0 0 24 24" width="36" height="36" aria-hidden="true"><path fill="currentColor" d="M12 3 7 8h3v6h4V8h3l-5-5ZM5 18h14v2H5v-2Z"/></svg>
+                    <strong id="drop-label">Drop a video here or click to choose</strong>
+                    <span class="muted">mp4 · avi · mov · mkv · webm, up to 500 MB</span>
+                </label>
+                <div class="row">
+                    <label for="threshold">Alarm threshold <span class="mono" id="threshold-value">0.50</span></label>
+                    <input type="range" id="threshold" min="0.05" max="0.99" step="0.01" value="0.5">
+                </div>
+                <p class="muted small">Default = calibrated on held-out normal videos (≈1% of normal footage above it).</p>
+                <button class="btn" id="analyze-btn" disabled>Analyze</button>
+                <div class="progress hidden" id="progress">
+                    <div class="bar"><div id="progress-fill"></div></div>
+                    <span class="muted" id="progress-msg">Queued</span>
+                </div>
+                <p class="error hidden" id="analyze-error"></p>
+            </div>
+
+            <div class="card" id="verdict-card">
+                <h2>Result</h2>
+                <div id="verdict-empty" class="empty">Analyze a video to see the detection result.</div>
+                <div id="verdict" class="hidden">
+                    <div class="verdict-banner" id="verdict-banner"></div>
+                    <div class="stats">
+                        <div><span class="label">Peak score</span><span class="value" id="r-max">–</span></div>
+                        <div><span class="label">Video probability</span><span class="value" id="r-video">–</span></div>
+                        <div><span class="label">Duration</span><span class="value" id="r-duration">–</span></div>
+                        <div><span class="label">Processing</span><span class="value" id="r-time">–</span></div>
+                    </div>
+                    <h3>Suspicious intervals</h3>
+                    <ul class="intervals" id="r-intervals"></ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="card hidden" id="player-card">
+            <div class="player-wrap">
+                <video id="player" controls playsinline></video>
+            </div>
+            <div class="chart-box"><canvas id="upload-chart"></canvas></div>
+            <p class="muted small">Click the chart to jump to that moment. Red bands are above the threshold.</p>
+        </div>
+
+        <div class="card">
+            <h2>Previous analyses</h2>
+            <table class="table" id="history-table">
+                <thead><tr><th>Date</th><th>File</th><th>Duration</th><th>Peak</th><th>Verdict</th></tr></thead>
+                <tbody></tbody>
+            </table>
+            <div class="empty hidden" id="history-empty">No analyses yet.</div>
+        </div>
+    </section>
+
+    <!-- ======================= EXPLORER ======================= -->
+    <section class="page" id="page-explorer">
+        <div class="card">
+            <div class="toolbar">
+                <h2>Test-set explorer</h2>
+                <select id="ds-select">
+                    <option value="ucf">UCF-Crime (290 test videos)</option>
+                    <option value="sht">ShanghaiTech (199 test videos)</option>
+                </select>
+                <select id="cat-select"><option value="">All categories</option></select>
+                <input type="search" id="search" placeholder="Search video…">
+            </div>
+            <p class="muted">The model runs on the provided Video Swin features of the official test split, which was never seen during training.
+                Grey = annotated ground-truth anomaly, line = model score.</p>
+            <div class="explorer">
+                <div class="list-wrap">
+                    <table class="table selectable" id="videos-table">
+                        <thead><tr><th>Video</th><th>Category</th><th>Peak</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="detail">
+                    <div id="detail-empty" class="empty">Select a video from the list.</div>
+                    <div id="detail" class="hidden">
+                        <div class="detail-head">
+                            <h3 id="d-name"></h3>
+                            <span class="pill" id="d-cat"></span>
+                            <span class="pill" id="d-verdict"></span>
+                        </div>
+                        <div class="chart-box tall"><canvas id="explorer-chart"></canvas></div>
+                        <div class="stats">
+                            <div><span class="label">Peak score</span><span class="value" id="d-max">–</span></div>
+                            <div><span class="label">Video probability</span><span class="value" id="d-video">–</span></div>
+                            <div><span class="label">GT anomaly</span><span class="value" id="d-gt">–</span></div>
+                            <div><span class="label">Detected</span><span class="value" id="d-det">–</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======================= MODEL ======================= -->
+    <section class="page" id="page-model">
+        <div class="card">
+            <h2>Test-set performance</h2>
+            <p class="muted">Frame-level ROC-AUC and AP on the official test split (standard protocol for weakly supervised video anomaly detection).
+                The checkpoint was selected on a validation split held out from the training videos.</p>
+            <div class="metric-grid" id="metrics"></div>
+        </div>
+        <div class="grid-2">
+            <div class="card">
+                <h2>Training curve</h2>
+                <div class="chart-box tall"><canvas id="train-chart"></canvas></div>
+            </div>
+            <div class="card">
+                <h2>Pipeline</h2>
+                <ol class="pipeline">
+                    <li><b>Snippets</b> 16 consecutive frames, resized to 224 px height</li>
+                    <li><b>Video Swin-B</b> Kinetics-400 pretrained 3D transformer (same checkpoint as the training features) → 1024-d feature per snippet</li>
+                    <li><b>Multi-sequence windows</b> overlapping windows of 32 snippets (stride 16)</li>
+                    <li><b>Transformer encoder</b> self-attention over time inside each window</li>
+                    <li><b>Two heads</b> snippet anomaly score + video-level anomaly probability</li>
+                    <li><b>Score correction</b> snippet score × video probability</li>
+                </ol>
+                <h3>Training (weak supervision)</h3>
+                <p class="muted">Only video-level labels (normal / anomalous) are used. The K-snippet sequence with the highest mean
+                    score must be high for anomalous and low for normal videos. Self-training shrinks K over four stages (32 → 16 → 8 → 4)
+                    and uses the previous stage's predictions as snippet pseudo-labels.</p>
+                <div id="model-config" class="mono small"></div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

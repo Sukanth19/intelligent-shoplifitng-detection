@@ -1,0 +1,68 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Data (too large for git)
+data/UCF-Crime/
+data/MSL-Features/
+data/videoswin/
+*.mp4
+*.avi
+*.mkv
+
+# Model checkpoints
+checkpoints/*.pt
+checkpoints/*.pth
+*.pt
+*.pth
+# trained models used by the app
+!checkpoints/msl_ucf_best.pt
+!checkpoints/msl_sht_best.pt
+
+# Results (metrics JSONs in results/ are kept)
+logs/
+*.log
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary
+tmp/
+temp/
+*.tmp

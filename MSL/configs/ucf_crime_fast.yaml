@@ -1,0 +1,90 @@
+# UCF-Crime Fast Training Configuration
+# Optimized for quick testing with small batches
+
+experiment:
+  name: "ucf_crime_fast"
+  output_dir: "results/ucf_crime_fast"
+  seed: 42
+
+dataset:
+  name: "UCF-Crime-H5-Fast"
+  type: "h5"
+  
+  train:
+    h5_path: "../data/UCF-VideoSwin-Features/ucf_swin_train_feature_224288224288.h5"
+    list_path: "../data/UCF-VideoSwin-Features/ucf-train-filter.list"
+    gt_path: "../data/UCF-VideoSwin-Features/ucf_gt_16.npy"
+  
+  test:
+    h5_path: "../data/UCF-VideoSwin-Features/ucf_swin_test_feature_224288224288.h5"
+    list_path: "../data/UCF-VideoSwin-Features/ucf-test.list"
+    gt_path: "../data/UCF-VideoSwin-Features/ucf_gt_16.npy"
+  
+  max_length: 64  # Much shorter for speed
+  num_workers: 0  # Windows safe
+  pin_memory: false
+
+model:
+  input_dim: 1024
+  hidden_dim: 256  # Reduced from 512
+  num_layers: 2  # Reduced from 3
+  num_heads: 4  # Reduced from 8
+  sequence_length: 16  # Reduced from 32
+  sequence_stride: 8  # Reduced from 16
+  dropout: 0.1
+  aggregation: 'mean'  # Faster than attention
+
+loss:
+  margin: 0.5
+  weight_video: 1.0
+  weight_snippet: 1.0
+
+training:
+  batch_size: 2  # Very small for speed
+  epochs: 5  # Just 5 epochs for testing
+  learning_rate: 0.0001
+  weight_decay: 0.0001
+  warmup_epochs: 0  # No warmup
+  
+  optimizer: "adam"
+  scheduler: "none"  # No scheduler for speed
+  
+  gradient_clip: 1.0
+  mixed_precision: true
+  
+  checkpoint_dir: "checkpoints"
+  checkpoint_interval: 2
+  
+  log_interval: 5
+  tensorboard_dir: "logs"
+  
+  early_stopping:
+    enabled: false
+
+logging:
+  log_file: "logs/training_fast.log"
+  level: "INFO"
+  tensorboard: false  # Disable for speed
+
+self_training:
+  enabled: false
+
+inference:
+  score_correction:
+    method: 'linear'
+    alpha: 0.5
+  
+  temporal_smoothing:
+    enabled: false  # Disable for speed
+  
+  anomaly_threshold: 0.5
+
+evaluation:
+  metrics:
+    - 'accuracy'
+    - 'auc'
+  
+  save_predictions: false
+  save_plots: false
+  
+device: "cuda"

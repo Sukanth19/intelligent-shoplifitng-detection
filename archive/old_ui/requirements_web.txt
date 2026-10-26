@@ -1,0 +1,13 @@
+# Web UI Requirements for Shoplifting Detection System
+# Install these in addition to the main MSL requirements
+
+Flask==3.0.0
+Werkzeug==3.0.1
+opencv-python==4.8.1.78
+numpy>=1.24.0
+torch>=2.0.0
+h5py>=3.8.0
+
+# Optional but recommended
+python-dotenv==1.0.0
+gunicorn==21.2.0  # For production deployment

@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intelligent Shoplifting Detection System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/enhanced.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-shield-alt"></i>
+                <h1>Shoplifting Detection AI</h1>
+            </div>
+            <nav class="nav">
+                <a href="#dashboard" class="nav-link active"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="#user-videos" class="nav-link"><i class="fas fa-upload"></i> Upload Video</a>
+                <a href="#dataset-analysis" class="nav-link"><i class="fas fa-database"></i> Dataset Analysis</a>
+                <a href="#batch-processing" class="nav-link"><i class="fas fa-tasks"></i> Batch Processing</a>
+                <a href="#live-monitor" class="nav-link"><i class="fas fa-video"></i> Live Monitor</a>
+                <a href="#reports" class="nav-link"><i class="fas fa-chart-bar"></i> Reports</a>
+                <a href="#history" class="nav-link"><i class="fas fa-history"></i> History</a>
+                <a href="#settings" class="nav-link"><i class="fas fa-cog"></i> Settings</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="section active">
+            <div class="container">
+                <h2 class="section-title">System Overview</h2>
+                
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon purple">
+                            <i class="fas fa-video"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 class="stat-value" id="total-analyses">0</h3>
+                            <p class="stat-label">Total Analyses</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon red">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 class="stat-value" id="anomalies-detected">0</h3>
+                            <p class="stat-label">Anomalies Detected</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon blue">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 class="stat-value" id="detection-rate">0%</h3>
+                            <p class="stat-label">Detection Rate</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon green">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 class="stat-value" id="avg-score">0.00</h3>
+                            <p class="stat-label">Avg. Anomaly Score</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <button class="btn btn-primary btn-large" onclick="showSection('user-videos')">
+                        <i class="fas fa-upload"></i> Upload Video
+                    </button>
+                    <button class="btn btn-secondary btn-large" onclick="showSection('dataset-analysis')">
+                        <i class="fas fa-database"></i> Analyze Dataset
+                    </button>
+                    <button class="btn btn-info btn-large" onclick="showSection('batch-processing')">
+                        <i class="fas fa-tasks"></i> Batch Process
+                    </button>
+                    <button class="btn btn-success btn-large" onclick="showSection('reports')">
+                        <i class="fas fa-chart-bar"></i> View Reports
+                    </button>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="card">
+                    <h3 class="card-title">Recent Activity</h3>
+                    <div id="recent-activity" class="activity-list">
+                        <p class="empty-state">No recent activity</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- User Videos Section -->
+        <section id="user-videos" class="section">
+            <div class="container">
+                <h2 class="section-title">
+                    <i class="fas fa-upload"></i> Upload & Analyze Your Videos
+                </h2>
+                <p class="section-subtitle">Upload your own surveillance footage for AI-powered shoplifting detection</p>
+                
+                <div class="analysis-layout">
+                    <!-- Upload & Control Panel -->
+                    <div class="control-panel">
+                        <div class="card">
+                            <h3 class="card-title">Upload Video</h3>
+                            
+                            <div class="upload-area" id="upload-area">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <h4>Drag & Drop Video Here</h4>
+                                <p>or click to browse</p>
+                                <p class="upload-hint">Supported: MP4, AVI, MOV, MKV (Max 500MB)</p>
+                                <input type="file" id="video-input" accept="video/*" hidden>
+                            </div>
+
+                            <div id="upload-info" class="upload-info" style="display: none;">
+                                <div class="file-info">
+                                    <i class="fas fa-file-video"></i>
+                                    <span id="filename"></span>
+                                </div>
+                                <button class="btn btn-success btn-full" id="analyze-btn">
+                                    <i class="fas fa-play"></i> Start Analysis
+                                </button>
+                            </div>
+
+                            <!-- Progress Bar -->
+                            <div id="progress-container" class="progress-container" style="display: none;">
+                                <div class="progress-info">
+                                    <span id="progress-status">Processing...</span>
+                                    <span id="progress-percent">0%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="progress-fill"></div>
+                                </div>
+                                <p class="progress-details" id="progress-details">Frame 0 of 0</p>
+                            </div>
+                        </div>
+
+                        <!-- Detection Settings -->
+                        <div class="card">
+                            <h3 class="card-title">Detection Settings</h3>
+                            
+                            <div class="setting-item">
+                                <label>Sensitivity Threshold</label>
+                                <input type="range" id="threshold" min="0" max="100" value="70" class="slider">
+                                <span class="slider-value" id="threshold-value">70%</span>
+                            </div>
+
+                            <div class="setting-item">
+                                <label>Confidence Level</label>
+                                <select class="select" id="confidence-level">
+                                    <option value="low">Low (60%)</option>
+                                    <option value="medium" selected>Medium (70%)</option>
+                                    <option value="high">High (85%)</option>
+                                </select>
+                            </div>
+
+                            <div class="setting-item">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="real-time-alerts" checked>
+                                    <span>Enable Real-time Alerts</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Video Preview & Results -->
+                    <div class="video-section">
+                        <div class="card">
+                            <h3 class="card-title">Video Preview</h3>
+                            <div class="video-container" id="video-container">
+                                <div class="video-placeholder">
+                                    <i class="fas fa-video"></i>
+                                    <p>Upload a video to begin analysis</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Analysis Results -->
+                        <div class="card" id="results-card" style="display: none;">
+                            <h3 class="card-title">Analysis Results</h3>
+                            
+                            <div class="result-summary">
+                                <div class="result-status" id="result-status">
+                                    <i class="fas fa-shield-alt"></i>
+                                    <span>No Anomalies Detected</span>
+                                </div>
+                                
+                                <div class="result-score">
+                                    <div class="score-circle" id="score-circle">
+                                        <svg viewBox="0 0 100 100">
+                                            <circle cx="50" cy="50" r="45" class="circle-bg"></circle>
+                                            <circle cx="50" cy="50" r="45" class="circle-progress" id="circle-progress"></circle>
+                                        </svg>
+                                        <div class="score-text">
+                                            <span class="score-value" id="anomaly-score">0</span>
+                                            <span class="score-label">Risk Score</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Anomaly Timeline -->
+                            <div class="anomaly-timeline" id="anomaly-timeline">
+                                <h4>Detection Timeline</h4>
+                                <div class="timeline-chart" id="timeline-chart"></div>
+                                <div class="detection-list" id="detection-list"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dataset Analysis Section (NEW) -->
+        <section id="dataset-analysis" class="section">
+            <div class="container">
+                <h2 class="section-title">
+                    <i class="fas fa-database"></i> Analyze Pre-existing Dataset
+                </h2>
+                <p class="section-subtitle">Process videos from UCF-Crime, SHT, or custom datasets</p>
+                
+                <div class="dataset-grid">
+                    <!-- Dataset Selection -->
+                    <div class="card">
+                        <h3 class="card-title">Select Dataset</h3>
+                        
+                        <div class="dataset-selector">
+                            <div class="dataset-option" data-dataset="ucf">
+                                <div class="dataset-icon">
+                                    <i class="fas fa-university"></i>
+                                </div>
+                                <h4>UCF-Crime</h4>
+                                <p>1900 videos, 13 categories</p>
+                                <span class="dataset-badge">Available</span>
+                            </div>
+                            
+                            <div class="dataset-option" data-dataset="sht">
+                                <div class="dataset-icon">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </div>
+                                <h4>SHT Dataset</h4>
+                                <p>Shoplifting-focused videos</p>
+                                <span class="dataset-badge">Available</span>
+                            </div>
+                            
+                            <div class="dataset-option" data-dataset="custom">
+                                <div class="dataset-icon">
+                                    <i class="fas fa-folder-open"></i>
+                                </div>
+                                <h4>Custom Dataset</h4>
+                                <p>Your own dataset</p>
+                                <span class="dataset-badge info">Browse</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Dataset Browser -->
+                    <div class="card">
+                        <h3 class="card-title">
+                            <span id="dataset-title">Select a Dataset</span>
+                            <button class="btn btn-sm btn-secondary" id="refresh-dataset">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
+                        </h3>
+                        
+                        <!-- Filter Controls -->
+                        <div class="filter-controls">
+                            <input type="text" class="search-input" placeholder="Search videos..." id="dataset-search">
+                            <select class="select" id="category-filter">
+                                <option value="all">All Categories</option>
+                                <option value="shoplifting">Shoplifting</option>
+                                <option value="normal">Normal</option>
+                                <option value="robbery">Robbery</option>
+                                <option value="stealing">Stealing</option>
+                            </select>
+                            <button class="btn btn-primary" id="analyze-selected">
+                                <i class="fas fa-play"></i> Analyze Selected
+                            </button>
+                        </div>
+                        
+                        <!-- Video List -->
+                        <div class="video-list" id="dataset-video-list">
+                            <p class="empty-state">Select a dataset to view videos</p>
+                        </div>
+                        
+                        <!-- Pagination -->
+                        <div class="pagination" id="dataset-pagination" style="display: none;">
+                            <button class="btn btn-sm" id="prev-page">
+                                <i class="fas fa-chevron-left"></i> Previous
+                            </button>
+                            <span class="page-info">Page <span id="current-page">1</span> of <span id="total-pages">1</span></span>
+                            <button class="btn btn-sm" id="next-page">
+                                Next <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Dataset Statistics -->
+                <div class="card">
+                    <h3 class="card-title">Dataset Statistics</h3>
+                    <div class="dataset-stats" id="dataset-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Total Videos:</span>
+                            <span class="stat-value">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Analyzed:</span>
+                            <span class="stat-value">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Anomalies Found:</span>
+                            <span class="stat-value">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Processing Time:</span>
+                            <span class="stat-value">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Batch Processing Section (NEW) -->
+        <section id="batch-processing" class="section">
+            <div class="container">
+                <h2 class="section-title">
+                    <i class="fas fa-tasks"></i> Batch Processing
+                </h2>
+                <p class="section-subtitle">Process multiple videos simultaneously for faster analysis</p>
+                
+                <div class="batch-layout">
+                    <div class="card">
+                        <h3 class="card-title">Upload Multiple Videos</h3>
+                        
+                        <div class="batch-upload-area" id="batch-upload-area">
+                            <i class="fas fa-folder-plus"></i>
+                            <h4>Drag & Drop Multiple Videos</h4>
+                            <p>or click to browse</p>
+                            <p class="upload-hint">Select multiple MP4, AVI, MOV, or MKV files</p>
+                            <input type="file" id="batch-video-input" accept="video/*" multiple hidden>
+                        </div>
+                        
+                        <!-- Batch Queue -->
+                        <div id="batch-queue" style="display: none;">
+                            <h4 class="queue-title">
+                                Processing Queue (<span id="queue-count">0</span> videos)
+                            </h4>
+                            <div class="queue-list" id="queue-list"></div>
+                            
+                            <div class="batch-controls">
+                                <button class="btn btn-success" id="start-batch">
+                                    <i class="fas fa-play-circle"></i> Start Batch Processing
+                                </button>
+                                <button class="btn btn-danger" id="clear-batch">
+                                    <i class="fas fa-trash"></i> Clear Queue
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Batch Settings -->
+                    <div class="card">
+                        <h3 class="card-title">Batch Settings</h3>
+                        
+                        <div class="setting-item">
+                            <label>Concurrent Processing</label>
+                            <select class="select" id="batch-concurrent">
+                                <option value="1">1 video at a time</option>
+                                <option value="2" selected>2 videos at a time</option>
+                                <option value="3">3 videos at a time</option>
+                                <option value="4">4 videos at a time</option>
+                            </select>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="batch-auto-save" checked>
+                                <span>Auto-save results</span>
+                            </label>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="batch-generate-report" checked>
+                                <span>Generate summary report</span>
+                            </label>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="batch-email-notify">
+                                <span>Email notification on completion</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Batch Progress -->
+                    <div class="card" id="batch-progress-card" style="display: none;">
+                        <h3 class="card-title">Batch Progress</h3>
+                        
+                        <div class="batch-overall-progress">
+                            <div class="progress-info">
+                                <span>Overall Progress</span>
+                                <span id="batch-progress-percent">0%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="batch-progress-fill"></div>
+                            </div>
+                            <p class="progress-details">
+                                <span id="batch-completed">0</span> of <span id="batch-total">0</span> videos processed
+                            </p>
+                        </div>
+                        
+                        <div class="batch-results-preview" id="batch-results">
+                            <!-- Results will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Live Monitor Section (NEW) -->
+        <section id="live-monitor" class="section">
+            <div class="container">
+                <h2 class="section-title">
+                    <i class="fas fa-video"></i> Live Camera Monitor
+                </h2>
+                <p class="section-subtitle">Real-time shoplifting detection from live camera feeds</p>
+                
+                <div class="live-monitor-layout">
+                    <div class="camera-grid" id="camera-grid">
+                        <!-- Camera 1 -->
+                        <div class="camera-panel">
+                            <div class="camera-header">
+                                <span class="camera-name">Camera 1 - Entrance</span>
+                                <span class="camera-status status-live">
+                                    <i class="fas fa-circle"></i> LIVE
+                                </span>
+                            </div>
+                            <div class="camera-feed">
+                                <div class="camera-placeholder">
+                                    <i class="fas fa-video-slash"></i>
+                                    <p>No feed connected</p>
+                                    <button class="btn btn-sm btn-primary">Connect</button>
+                                </div>
+                            </div>
+                            <div class="camera-stats">
+                                <span class="stat-mini">
+                                    <i class="fas fa-exclamation-triangle"></i> 0 alerts
+                                </span>
+                                <span class="stat-mini">
+                                    <i class="fas fa-clock"></i> 00:00:00
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Camera 2 -->
+                        <div class="camera-panel">
+                            <div class="camera-header">
+                                <span class="camera-name">Camera 2 - Aisle 1</span>
+                                <span class="camera-status status-offline">
+                                    <i class="fas fa-circle"></i> OFFLINE
+                                </span>
+                            </div>
+                            <div class="camera-feed">
+                                <div class="camera-placeholder">
+                                    <i class="fas fa-video-slash"></i>
+                                    <p>No feed connected</p>
+                                    <button class="btn btn-sm btn-primary">Connect</button>
+                                </div>
+                            </div>
+                            <div class="camera-stats">
+                                <span class="stat-mini">
+                                    <i class="fas fa-exclamation-triangle"></i> 0 alerts
+                                </span>
+                                <span class="stat-mini">
+                                    <i class="fas fa-clock"></i> 00:00:00
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Camera 3 -->
+                        <div class="camera-panel">
+                            <div class="camera-header">
+                                <span class="camera-name">Camera 3 - Checkout</span>
+                                <span class="camera-status status-offline">
+                                    <i class="fas fa-circle"></i> OFFLINE
+                                </span>
+                            </div>
+                            <div class="camera-feed">
+                                <div class="camera-placeholder">
+                                    <i class="fas fa-video-slash"></i>
+                                    <p>No feed connected</p>
+                                    <button class="btn btn-sm btn-primary">Connect</button>
+                                </div>
+                            </div>
+                            <div class="camera-stats">
+                                <span class="stat-mini">
+                                    <i class="fas fa-exclamation-triangle"></i> 0 alerts
+                                </span>
+                                <span class="stat-mini">
+                                    <i class="fas fa-clock"></i> 00:00:00
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Camera 4 -->
+                        <div class="camera-panel">
+                            <div class="camera-header">
+                                <span class="camera-name">Camera 4 - Exit</span>
+                                <span class="camera-status status-offline">
+                                    <i class="fas fa-circle"></i> OFFLINE
+                                </span>
+                            </div>
+                            <div class="camera-feed">
+                                <div class="camera-placeholder">
+                                    <i class="fas fa-video-slash"></i>
+                                    <p>No feed connected</p>
+                                    <button class="btn btn-sm btn-primary">Connect</button>
+                                </div>
+                            </div>
+                            <div class="camera-stats">
+                                <span class="stat-mini">
+                                    <i class="fas fa-exclamation-triangle"></i> 0 alerts
+                                </span>
+                                <span class="stat-mini">
+                                    <i class="fas fa-clock"></i> 00:00:00
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Alert Panel -->
+                    <div class="alert-panel">
+                        <div class="card">
+                            <h3 class="card-title">
+                                <i class="fas fa-bell"></i> Live Alerts
+                            </h3>
+                            <div class="live-alerts" id="live-alerts">
+                                <p class="empty-state">No alerts</p>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <h3 class="card-title">Camera Settings</h3>
+                            <button class="btn btn-primary btn-full">
+                                <i class="fas fa-plus"></i> Add Camera
+                            </button>
+                            <button class="btn btn-secondary btn-full">
+                                <i class="fas fa-cog"></i> Configure Cameras
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Reports Section (NEW) -->
+        <section id="reports" class="section">
+            <div class="container">
+                <h2 class="section-title">
+                    <i class="fas fa-chart-bar"></i> Reports & Analytics
+                </h2>
+                <p class="section-subtitle">Generate comprehensive reports and view analytics</p>
+                
+                <!-- Report Cards -->
+                <div class="report-cards">
+                    <div class="report-card" onclick="generateReport('daily')">
+                        <div class="report-icon blue">
+                            <i class="fas fa-calendar-day"></i>
+                        </div>
+                        <h4>Daily Report</h4>
+                        <p>Today's analysis summary</p>
+                        <button class="btn btn-sm btn-primary">Generate</button>
+                    </div>
+                    
+                    <div class="report-card" onclick="generateReport('weekly')">
+                        <div class="report-icon green">
+                            <i class="fas fa-calendar-week"></i>
+                        </div>
+                        <h4>Weekly Report</h4>
+                        <p>Last 7 days overview</p>
+                        <button class="btn btn-sm btn-success">Generate</button>
+                    </div>
+                    
+                    <div class="report-card" onclick="generateReport('monthly')">
+                        <div class="report-icon purple">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <h4>Monthly Report</h4>
+                        <p>Complete month analysis</p>
+                        <button class="btn btn-sm btn-secondary">Generate</button>
+                    </div>
+                    
+                    <div class="report-card" onclick="generateReport('custom')">
+                        <div class="report-icon orange">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <h4>Custom Report</h4>
+                        <p>Select date range</p>
+                        <button class="btn btn-sm btn-info">Generate</button>
+                    </div>
+                </div>
+                
+                <!-- Charts -->
+                <div class="charts-grid">
+                    <div class="card">
+                        <h3 class="card-title">Detection Trends</h3>
+                        <div class="chart-placeholder">
+                            <i class="fas fa-chart-line"></i>
+                            <p>Chart will appear here</p>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3 class="card-title">Category Distribution</h3>
+                        <div class="chart-placeholder">
+                            <i class="fas fa-chart-pie"></i>
+                            <p>Chart will appear here</p>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3 class="card-title">Hourly Activity</h3>
+                        <div class="chart-placeholder">
+                            <i class="fas fa-chart-bar"></i>
+                            <p>Chart will appear here</p>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3 class="card-title">Accuracy Metrics</h3>
+                        <div class="chart-placeholder">
+                            <i class="fas fa-chart-area"></i>
+                            <p>Chart will appear here</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Export Options -->
+                <div class="card">
+                    <h3 class="card-title">Export Data</h3>
+                    <div class="export-options">
+                        <button class="btn btn-primary">
+                            <i class="fas fa-file-pdf"></i> Export to PDF
+                        </button>
+                        <button class="btn btn-success">
+                            <i class="fas fa-file-excel"></i> Export to Excel
+                        </button>
+                        <button class="btn btn-info">
+                            <i class="fas fa-file-csv"></i> Export to CSV
+                        </button>
+                        <button class="btn btn-secondary">
+                            <i class="fas fa-file-code"></i> Export to JSON
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+                    <!-- Upload & Control Panel -->
+                    <div class="control-panel">
+                        <div class="card">
+                            <h3 class="card-title">Upload Video</h3>
+                            
+                            <div class="upload-area" id="upload-area">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <h4>Drag & Drop Video Here</h4>
+                                <p>or click to browse</p>
+                                <p class="upload-hint">Supported: MP4, AVI, MOV, MKV (Max 500MB)</p>
+                                <input type="file" id="video-input" accept="video/*" hidden>
+                            </div>
+
+                            <div id="upload-info" class="upload-info" style="display: none;">
+                                <div class="file-info">
+                                    <i class="fas fa-file-video"></i>
+                                    <span id="filename"></span>
+                                </div>
+                                <button class="btn btn-success btn-full" id="analyze-btn">
+                                    <i class="fas fa-play"></i> Start Analysis
+                                </button>
+                            </div>
+
+                            <!-- Progress Bar -->
+                            <div id="progress-container" class="progress-container" style="display: none;">
+                                <div class="progress-info">
+                                    <span id="progress-status">Processing...</span>
+                                    <span id="progress-percent">0%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="progress-fill"></div>
+                                </div>
+                                <p class="progress-details" id="progress-details">Frame 0 of 0</p>
+                            </div>
+                        </div>
+
+                        <!-- Detection Settings -->
+                        <div class="card">
+                            <h3 class="card-title">Detection Settings</h3>
+                            
+                            <div class="setting-item">
+                                <label>Sensitivity Threshold</label>
+                                <input type="range" id="threshold" min="0" max="100" value="70" class="slider">
+                                <span class="slider-value" id="threshold-value">70%</span>
+                            </div>
+
+                            <div class="setting-item">
+                                <label>Confidence Level</label>
+                                <select class="select" id="confidence-level">
+                                    <option value="low">Low (60%)</option>
+                                    <option value="medium" selected>Medium (70%)</option>
+                                    <option value="high">High (85%)</option>
+                                </select>
+                            </div>
+
+                            <div class="setting-item">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="real-time-alerts" checked>
+                                    <span>Enable Real-time Alerts</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Video Preview & Results -->
+                    <div class="video-section">
+                        <div class="card">
+                            <h3 class="card-title">Video Preview</h3>
+                            <div class="video-container" id="video-container">
+                                <div class="video-placeholder">
+                                    <i class="fas fa-video"></i>
+                                    <p>Upload a video to begin analysis</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Analysis Results -->
+                        <div class="card" id="results-card" style="display: none;">
+                            <h3 class="card-title">Analysis Results</h3>
+                            
+                            <div class="result-summary">
+                                <div class="result-status" id="result-status">
+                                    <i class="fas fa-shield-alt"></i>
+                                    <span>No Anomalies Detected</span>
+                                </div>
+                                
+                                <div class="result-score">
+                                    <div class="score-circle" id="score-circle">
+                                        <svg viewBox="0 0 100 100">
+                                            <circle cx="50" cy="50" r="45" class="circle-bg"></circle>
+                                            <circle cx="50" cy="50" r="45" class="circle-progress" id="circle-progress"></circle>
+                                        </svg>
+                                        <div class="score-text">
+                                            <span class="score-value" id="anomaly-score">0</span>
+                                            <span class="score-label">Risk Score</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Anomaly Timeline -->
+                            <div class="anomaly-timeline" id="anomaly-timeline">
+                                <h4>Detection Timeline</h4>
+                                <div class="timeline-chart" id="timeline-chart"></div>
+                                <div class="detection-list" id="detection-list"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- History Section -->
+        <section id="history" class="section">
+            <div class="container">
+                <h2 class="section-title">Analysis History</h2>
+                
+                <div class="card">
+                    <div class="history-filters">
+                        <input type="text" class="search-input" placeholder="Search analyses..." id="history-search">
+                        <select class="select" id="history-filter">
+                            <option value="all">All Results</option>
+                            <option value="anomalous">Anomalies Only</option>
+                            <option value="normal">Normal Only</option>
+                        </select>
+                    </div>
+
+                    <div class="history-list" id="history-list">
+                        <p class="empty-state">No analysis history yet</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Settings Section -->
+        <section id="settings" class="section">
+            <div class="container">
+                <h2 class="section-title">System Settings</h2>
+                
+                <div class="settings-grid">
+                    <div class="card">
+                        <h3 class="card-title">Model Configuration</h3>
+                        
+                        <div class="setting-item">
+                            <label>Model Checkpoint</label>
+                            <select class="select" id="model-checkpoint">
+                                <option value="best_model.pt">Best Model</option>
+                                <option value="latest_model.pt">Latest Model</option>
+                            </select>
+                        </div>
+
+                        <div class="setting-item">
+                            <label>Processing Device</label>
+                            <select class="select" id="device">
+                                <option value="cuda">GPU (CUDA)</option>
+                                <option value="cpu">CPU</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="card-title">Notification Settings</h3>
+                        
+                        <div class="setting-item">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="email-alerts" checked>
+                                <span>Email Alerts</span>
+                            </label>
+                        </div>
+
+                        <div class="setting-item">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="sound-alerts" checked>
+                                <span>Sound Alerts</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="card-title">System Information</h3>
+                        
+                        <div class="info-item">
+                            <span>Model Version:</span>
+                            <strong>MSL v1.0</strong>
+                        </div>
+
+                        <div class="info-item">
+                            <span>PyTorch Version:</span>
+                            <strong>2.6.0+cu126</strong>
+                        </div>
+
+                        <div class="info-item">
+                            <span>CUDA Available:</span>
+                            <strong class="status-badge success">Yes</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast"></div>
+
+    <script src="{{ url_for('static', filename='js/animations.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/enhanced.js') }}"></script>
+</body>
+</html>

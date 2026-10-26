@@ -1,0 +1,111 @@
+# Shanghai Tech (SHT) Real Data Configuration
+# Uses pre-extracted VideoSwin features in H5 format from MSL authors
+
+experiment:
+  name: "sht_msl_h5"
+  output_dir: "results/sht"
+  seed: 42
+
+dataset:
+  name: "SHT-H5"
+  type: "h5"  # Use H5 loader
+  
+  train:
+    h5_path: "../data/SHT-VideoSwin-Features/sh_swin_train_feature_256320224.h5"
+    list_path: "../data/SHT-VideoSwin-Features/sh-train.list"
+    gt_path: "../data/SHT-VideoSwin-Features/sh_gt_16.npy"
+  
+  test:
+    h5_path: "../data/SHT-VideoSwin-Features/sh_swin_test_feature_256320224.h5"
+    list_path: "../data/SHT-VideoSwin-Features/sh-test.list"
+    gt_path: "../data/SHT-VideoSwin-Features/sh_gt_16.npy"
+  
+  max_length: 256  # Maximum temporal length (SHT videos are shorter)
+  num_workers: 4
+  pin_memory: true
+
+model:
+  input_dim: 1024  # VideoSwin feature dimension
+  hidden_dim: 512  # Transformer hidden dimension
+  num_layers: 3  # Number of Transformer layers
+  num_heads: 8  # Number of attention heads
+  sequence_length: 32  # Initial sequence length for MSL
+  sequence_stride: 16  # Initial stride for MSL
+  dropout: 0.1
+  aggregation: 'attention'  # Sequence aggregation method
+
+loss:
+  margin: 0.5  # Hinge loss margin
+  weight_video: 1.0  # Video-level loss weight
+  weight_snippet: 1.0  # Snippet-level loss weight
+
+training:
+  batch_size: 16  # Batch size (adjust based on GPU memory)
+  epochs: 50  # Total epochs
+  learning_rate: 0.0001
+  weight_decay: 0.0001
+  warmup_epochs: 5
+  
+  optimizer: "adam"
+  scheduler: "cosine"
+  
+  gradient_clip: 1.0
+  mixed_precision: true  # Use AMP for faster training
+  
+  checkpoint_dir: "checkpoints"
+  checkpoint_interval: 5  # Save every N epochs
+  
+  log_interval: 10  # Log every N batches
+  tensorboard_dir: "logs"
+  
+  early_stopping:
+    enabled: true
+    patience: 10
+    min_delta: 0.001
+
+self_training:
+  enabled: false  # Start with single-stage training
+  stages:
+    - name: "stage1"
+      sequence_length: 64
+      stride: 32
+      epochs: 15
+      learning_rate: 0.0001
+    
+    - name: "stage2"
+      sequence_length: 48
+      stride: 24
+      epochs: 15
+      learning_rate: 0.00005
+    
+    - name: "stage3"
+      sequence_length: 32
+      stride: 16
+      epochs: 20
+      learning_rate: 0.00001
+
+inference:
+  score_correction:
+    method: 'linear'  # 'linear', 'multiplicative', 'threshold', 'none'
+    alpha: 0.5  # Linear blending factor
+  
+  temporal_smoothing:
+    enabled: true
+    window_size: 5
+    method: 'gaussian'  # 'gaussian', 'uniform', 'median'
+  
+  anomaly_threshold: 0.5  # Detection threshold
+
+evaluation:
+  metrics:
+    - 'accuracy'
+    - 'precision'
+    - 'recall'
+    - 'f1'
+    - 'auc'
+    - 'ap'
+  
+  save_predictions: true
+  save_plots: true
+  
+device: "cuda"  # 'cuda' or 'cpu'

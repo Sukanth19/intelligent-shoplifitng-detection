@@ -1,0 +1,158 @@
+# MSL Default Configuration
+# Self-Training Multi-Sequence Learning for Video Anomaly Detection
+
+# Experiment
+experiment:
+  name: "msl_ucf_crime"
+  output_dir: "results"
+  seed: 42
+  device: "cuda"  # or "cpu"
+
+# Data
+data:
+  # Update these paths to your actual data location
+  feature_dir: "data/synthetic"  # Change to "data/MSL-Features" for real data
+  train_split: "train"
+  test_split: "test"
+  
+  # Feature properties
+  feature_dim: 1024  # VideoSwin-Base output dimension
+  max_len: null  # Maximum sequence length (null = no truncation)
+  normalize: false  # Features are already normalized
+  
+  # DataLoader
+  batch_size: 16
+  num_workers: 4
+  shuffle_train: true
+  pin_memory: true
+
+# Model Architecture
+model:
+  name: "MSLTransformer"
+  
+  # Input/Output
+  input_dim: 1024  # Should match data.feature_dim
+  hidden_dim: 512
+  
+  # Transformer
+  num_layers: 3
+  num_heads: 8
+  dropout: 0.1
+  ff_dim: 2048  # Feedforward dimension
+  activation: "gelu"
+  
+  # Multi-Sequence Learning
+  sequence_length: 32  # Number of snippets per sequence
+  sequence_stride: 16  # Stride between sequences
+  num_sequences: null  # Auto-compute based on video length
+  
+  # Output
+  num_classes: 2  # Binary: normal vs anomaly
+
+# Loss
+loss:
+  name: "MSLRankingLoss"
+  margin: 0.5  # Hinge loss margin
+  weight_video: 1.0  # Weight for video-level loss
+  weight_snippet: 1.0  # Weight for snippet-level loss
+
+# Training
+training:
+  # Optimization
+  optimizer: "adam"
+  learning_rate: 0.0001
+  weight_decay: 0.00005
+  
+  # Learning rate schedule
+  scheduler: "cosine"  # or "step", "none"
+  lr_warmup_epochs: 5
+  lr_min: 0.00001
+  
+  # Epochs
+  epochs: 50
+  early_stopping_patience: 10
+  
+  # Gradient
+  max_grad_norm: 1.0  # Gradient clipping
+  
+  # Mixed precision
+  use_amp: true  # Automatic Mixed Precision
+  
+  # Logging
+  log_interval: 10  # Log every N batches
+  val_interval: 1  # Validate every N epochs
+  
+  # Checkpointing
+  save_best: true
+  save_last: true
+  checkpoint_dir: "checkpoints"
+
+# Self-Training
+self_training:
+  enabled: true
+  
+  # Stages (progressive sequence length)
+  stages:
+    - name: "stage1"
+      sequence_length: 64
+      epochs: 15
+      
+    - name: "stage2"
+      sequence_length: 48
+      epochs: 15
+      
+    - name: "stage3"
+      sequence_length: 32
+      epochs: 20
+  
+  # Selection strategy
+  top_k_ratio: 0.8  # Use top 80% most confident predictions
+  confidence_threshold: 0.7
+
+# Evaluation
+evaluation:
+  # Metrics
+  compute_auc: true
+  compute_ap: true  # Average Precision
+  
+  # Thresholds
+  anomaly_threshold: 0.5
+  
+  # Score correction
+  score_correction:
+    enabled: true
+    method: "video_level"  # Use video-level probability for correction
+    alpha: 0.5  # Blending factor
+  
+  # Output
+  save_predictions: true
+  save_plots: true
+  save_metrics: true
+
+# Inference
+inference:
+  checkpoint: "checkpoints/best_model.pt"
+  batch_size: 1
+  output_dir: "results/inference"
+  
+  # Visualization
+  generate_timeline: true
+  detect_intervals: true
+  interval_threshold: 0.6
+
+# Logging
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  log_file: "logs/training.log"
+  tensorboard: true
+  tensorboard_dir: "logs/tensorboard"
+  
+  # What to log
+  log_params: true
+  log_gradients: false
+  log_predictions: true
+
+# Reproducibility
+reproducibility:
+  deterministic: true
+  benchmark: false  # Set to true for speed if input size is constant

@@ -1,0 +1,16 @@
+MSL MODEL EVALUATION RESULTS
+================================================================================
+
+Checkpoint: checkpoints/selftraining_complete_final.pt
+Test videos: 290
+Normal videos: 150
+Anomaly videos: 140
+
+METRICS:
+  AUC: 0.5433 (54.33%)
+  AP: 0.4901 (49.01%)
+
+COMPARISON WITH PAPER:
+  Paper AUC: 82-84%
+  Our AUC: 54.33%
+  Gap: +28.67%

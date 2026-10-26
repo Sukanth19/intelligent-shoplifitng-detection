@@ -1,0 +1,17 @@
+# environment
+.venv/
+__pycache__/
+*.pyc
+
+# dataset features (1.5 GB, h5 files exceed github's 100 MB limit) - see README
+data/
+
+# runtime output of the web app
+uploads/
+static/results/
+
+# old checkpoints from the first implementation (459 MB)
+MSL/checkpoints/old/
+
+# backup of the original MSL clone's git metadata
+archive/MSL_original_git/
