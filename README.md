@@ -10,6 +10,12 @@ video ─► 16-frame snippets ─► Video Swin-B (Kinetics-400) ─► 1024-d 
       ─► score correction ─► suspicious intervals + annotated video
 ```
 
+## Demo
+
+[![Web app demo](docs/showcase.gif)](docs/showcase.mp4)
+
+*Click the preview for the full-quality video.*
+
 ## Data
 
 The Video Swin features (1.5 GB) are not in this repo. Download them from the MSL authors
